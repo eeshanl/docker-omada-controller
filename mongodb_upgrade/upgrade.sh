@@ -99,8 +99,14 @@ version_step_upgrade() {
     JOURNAL=""
   fi
 
-  # run repair on db to upgrade
-  #/tmp/mongod-${MONGO_VER} --dbpath /opt/tplink/EAPController/data/db -pidfilepath /opt/tplink/EAPController/data/mongo.pid --bind_ip 127.0.0.1 ${JOURNAL} --logpath /opt/tplink/EAPController/data/mongodb_upgrade.log --logappend --repair || abort_and_rollback
+  # before the first upgrade, run a repair
+  if [ "${EXPECTED_COMPAT_VERSION}" = "3.6" ]
+  then
+    # run a repair on db
+    echo -n "INFO: running repair on MongoDB to ensure database consistency before upgrade..."
+    /tmp/mongod-${MONGO_VER} --dbpath /opt/tplink/EAPController/data/db -pidfilepath /opt/tplink/EAPController/data/mongo.pid --bind_ip 127.0.0.1 ${JOURNAL} --logpath /opt/tplink/EAPController/data/mongodb_repair.log --repair || abort_and_rollback
+    echo "done"
+  fi
 
   # start db
   echo -n "INFO: starting mongod ${MONGO_VER}..."
